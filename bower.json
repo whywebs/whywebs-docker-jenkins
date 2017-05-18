@@ -1,0 +1,34 @@
+{
+  "name": "whywebs",
+  "authors": [
+    "Mutasem Elayyoub <melayyoub@outsellinc.com>"
+  ],
+  "description": "Whywebs.com bower installation for some required packages",
+  "main": "",
+  "keywords": [
+    "Whywebs"
+  ],
+  "license": "MIT",
+  "homepage": "whywebs.com",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+   "dependencies": {
+        "browser-sync": "^2.11.2",
+        "connect-livereload": "^0.5.4",
+        "gulp": "^3.9.1",
+        "gulp-autoprefixer": "^3.1.0",
+        "gulp-notify": "^2.2.0",
+        "gulp-plumber": "^1.1.0",
+        "gulp-sass": "^2.3.1",
+        "gulp-sourcemaps": "^1.6.0"
+      },
+  "devDependencies": {
+    "singularity": "^1.7.0",
+    "sass-toolkit": "^2.10.0"
+  }
+}

@@ -1,0 +1,22 @@
+drupal:
+  image: drupal
+  links:
+      - whywebs_drupal_db@mysql
+  ports:
+      - "80"
+      - "443"
+  hostname: "whydrupal.dev"
+
+whywebs_drupal_db:
+  image: mariadb
+  environment:
+    MYSQL_ROOT_PASSWORD: root
+phpmyadmin:
+  image: corbinu/docker - phpmyadmin
+  links:
+    - whywebs_drupal_db:mysql
+  ports:
+    - "80"
+  environment: 
+    MYSQL_USERNAME: root
+    MYSQL_ROOT_PASSWORD: root

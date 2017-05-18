@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="mutasem-dev-env" default="ww:build">
+    <!-- Generic variables -->
+    <property name="dir.base" value="${project.basedir}"/>
+    <property name="dir.vendor" value="${dir.base}/vendor"/>
+    <property name="dir.tools" value="${dir.vendor}"/>
+    <property name="composerPhar" value="${dir.base}/composer.phar"/>
+    <property name="sudoPassword" value="Mutasem123"/>
+    <property name="vendorname" value="whywebs"/>
+    <property name="message" value="This phing built by Mutasem Elayyoub for WhyWebs.com"/>
+    
+    <target name="welcome">
+        <echo msg="${message}"/>
+        <echo msg="${message}"/>
+    </target>
+    
+    <!-- Set of sites in the codebase -->
+    <fileset dir="${dir.sites}" id="sites">
+        <type type="dir"/>
+        <depth max="0" min="0"/>
+    </fileset>
+    
+    
+    <!-- Place to add build tasks for this project if you need to add project.make file. -->
+<!--    <target name="project:build" description="Run project specific build tasks.">-->
+<!--        <property name="project-builded" value="1"/>-->
+<!--        <echo msg="${message}"/>-->
+<!--    </target>-->
+
+    <!-- Drupal build tasks -->
+    <target name="ww:build"
+    depends="ww:php-check,
+    ww:dockerCheck,
+    ww:composer-check,
+    ww:composer-download,
+    ww:composerUpdate,
+    ww:composerInstall,
+    ww:phpdox,
+    ww:dockerInstall,
+    ww:dockerInstallEnv,
+    ww:bower,
+    ww:copy-parameters,
+    tests:run"
+    description="Build a dev environment by Mutasem ELayyoub" />
+    
+    
+    <!--  PHPLOC  -->
+    <target name="ww:phploc" description="Measure project size using PHPLOC and log result in CSV and XML format.">
+        <exec executable="${dir.tools}/phploc/phploc">
+            <arg value="--count-tests"/>
+            <arg value="--log-csv"/>
+            <arg path="${dir.tools}/phploc/phploc/build/logs/phploc.csv"/>
+            <arg value="--log-xml"/>
+            <arg path="${dir.tools}/phploc/phploc/build/logs/phploc.xml"/>
+            <arg path="${dir.tools}/phploc/phploc/src"/>
+            <arg path="${dir.tools}/phploc/phploc/tests"/>
+        </exec>
+    </target>
+    
+    <!-- phpdox   -->
+    <target name="ww:phpdox" depends="ww:phploc,ww:phpunit,ww:phpmd" description="Generate project documentation using phpDox">
+        <exec executable="${dir.tools}/theseer/phpdox">
+            <arg value="--file" />
+            <arg value="${dir.tools}/theseer/phpdox/build/phpdox.xml" />
+        </exec>
+    </target>
+    
+    <!-- ww:phpmd-ci   -->
+    <target name="ww:phpmd" description="Generate project documentation using phpDox">
+        <exec executable="${dir.tools}/phpmd/phpmd">
+            <arg value="--file" />
+            <arg value="${dir.tools}/phpmd/phpmd/build/phpdox.xml" />
+        </exec>
+    </target>
+    
+    <!-- ww:phpcs-ci   -->
+    <target name="ww:phpunit" description="Generate project documentation using phpDox">
+        <exec executable="${dir.tools}/phpunit/">
+            <arg value="--file" />
+            <arg value="${dir.tools}/phpunit/phpunit/build.xml" />
+        </exec>
+    </target>
+    
+    <!-- Copy parameters.yml  -->
+    <target name="ww:copy-parameters" description="Copy parameters.yml file">
+        <exec executable="cp">
+            <arg path="app/config/parameters.yml.dist" />
+            <arg path="app/config/parameters.yml" />
+        </exec>
+    </target>
+    
+    <!--  Test Composer  -->
+    
+    <target name="ww:composer" description="Installing composer dependencies under --dev">
+        <exec executable="composer">
+            <arg value="install" />
+            <arg value="--dev" />
+        </exec>
+    </target>
+    
+    <!--  Install Bower dependencies  -->
+
+    <target name="ww:bower" description="Installing bower dependencies">
+        <exec command="bower install" />
+        <exec command="bower update" />    
+    </target>
+
+    <!-- check php first -->
+    <target name="ww:php-check">
+        <condition property="php" value="php">
+            <not>
+                <isset property="${php}"/>
+                
+            </not>
+        </condition>
+        <echo msg="${php}"/>
+    </target>
+    
+    <!-- check docker first -->
+    <target name="ww:dockerCheck">
+        <echo msg="check OS first then check docker and ruby ==> "/>
+        
+        <if>
+            <os family="windows" />
+            <then>
+                <fail message="It's a windows, I'm sorry this phing needs ruby to finish, maybe soon. Thank you!" checkreturn="true"/>
+            </then>
+        </if>
+        <if>
+            <os family="mac" />
+            <then>
+                <echo>It's a mac Great the installation will keep going :-)</echo>
+            </then>
+        </if>
+        <!-- # Install Xcode -->
+        <exec command='xcode-select --install' checkreturn="false" />
+        <!-- # Install Homebrew -->
+        <!-- <exec command='ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"' checkreturn="false" /> -->
+
+        <!--  # Install Cask-->
+        <exec command='ruby -e "$(curl -fsSL https://raw.github.com/mxcl/homebrew/go)"' checkreturn="true"/>
+        <exec command="brew tap phinze/homebrew-cask"/>
+        <exec command="brew tap caskroom/cask"/>
+        <exec command="brew install brew-cask-completion"/>
+        <exec command="brew cask install java"/>
+        <exec command="brew update"/>
+        
+
+        <!--  # Install Yum-->
+        <exec command="brew cask reinstall java" />
+        <!--  # Install docker toolbox -->
+        <exec command="brew install docker"/>
+        <exec command="brew install boot2docker"/>
+        <exec command="brew install jenkins"/>
+        <exec command="brew cask install docker-toolbox" />
+        <exec command="curl -L https://github.com/docker/compose/releases/download/1.12.0/docker-compose-`uname -s`-`uname -m` > ./docker-compose" />
+        <exec command="sudo mv ./docker-compose /usr/bin/docker-compose" />
+        <exec command="sudo chmod +x /usr/bin/docker-compose" />
+        <exec command="brew link --overwrite docker-machine" />
+        <exec command="docker info"/>
+     </target>
+    
+    <!-- install docker -->
+    <target name="ww:dockerInstall">
+        <echo msg="Install docker now == "/>
+        
+        <!-- pull jenkins  -->
+        <exec command="sudo docker pull jenkins" />
+
+        <!-- opend jenkins -->
+        <exec command="sudo docker run -d -p 49001:8080 -v $PWD/jenkins:/var/jenkins_home:z -t jenkins" />
+    </target>
+
+    <!-- install docker -->
+    <target name="ww:dockerInstallEnv">
+        <echo msg="Install the env using docker and docker compose = "/>
+
+    <!--   # create the docker machine -->
+   
+     <exec command='docker-machine create --driver "virtualbox" "${vendorname}"' />
+
+    <!-- # start the docker machine -->
+    <exec command='docker-machine start "${vendorname}"' />
+    <exec command='docker-machine env "${vendorname}"' />
+    <!--   # this command allows the docker commands to be used in the terminal -->        
+    <exec command='eval "$(docker-machine env ${vendorname})"' />
+
+    <!-- # at this point can run any "docker" or "docker-compose" commands you want -->
+        <exec executable="docker-compose up" />
+        <exec command="brew update"/>
+    </target>
+
+    
+    <!--  Install all the requirments com through and to composer  -->
+    <target name="ww:composer-check">
+        <available file="${composerPhar}" property="composer.present"/>
+    </target>
+    
+    <target name="ww:composer-download" depends="ww:composer-check">
+        <property name="composer.noselfupdate" value="true"/>
+        <httpget url="https://getcomposer.org/composer.phar" dir="${dir.base}"/>
+    </target>
+    
+    <target name="ww:composer-selfupdate" depends="ww:php-check,ww:composer-download" unless="composer.noselfupdate">
+        <exec executable="${php}">
+            <arg value="${composerPhar}"/>
+            <arg value="self-update"/>
+            <arg value="--quiet"/>
+        </exec>
+    </target>
+    
+    <target name="ww:composerUpdate" depends="ww:composer-selfupdate" unless="composer.noupdate" description="Run composer update">
+        <exec executable="${php}">
+            <arg value="${composerPhar}"/>
+            <arg value="update"/>
+        </exec>
+    </target>
+    
+    <target name="ww:composerInstall" description="Installing dependencies by composer" depends="ww:composer-check">
+        <composer command="install">
+            <arg/>
+        </composer>
+    </target>
+    
+    
+    <!-- Tasks for testing the codebase -->
+    <target name="tests:run"
+        description="Run various tests on your installation.">
+        <echo msg="${message}"/>
+    </target>
+    
+    
+    
+</project>
